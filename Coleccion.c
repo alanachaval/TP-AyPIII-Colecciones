@@ -21,7 +21,7 @@ Coleccion* coleccion_inicializar(Coleccion* this, void* valores, unsigned tam_ti
 
 Coleccion* coleccion_redimensionar(Coleccion* this){
 	this->espacio = this->espacio * 2;
-	realloc(this->coleccion, this->espacio * sizeof(void*));
+	this->coleccion = realloc(this->coleccion, this->espacio * sizeof(void*));
 	return this;
 }
 
@@ -30,7 +30,7 @@ Coleccion* coleccion_agregar(Coleccion* this, void* valor){
 		coleccion_redimensionar(this);
 	}
 	*(this->coleccion + this->elementos) = malloc(this->tam_tipo);
-	memcpy(this->coleccion + this->elementos, valor, this->tam_tipo);
+	memcpy(*(this->coleccion + this->elementos), valor, this->tam_tipo);
 	this->elementos += 1;
 	return this;
 }
@@ -42,11 +42,12 @@ Coleccion* coleccion_agregar(Coleccion* this, void* valor){
 int coleccion_remover(Coleccion* this, void* valor){
 	int posicion = this->elementos;
 	void** actual = this->coleccion;
-	while(--posicion != -1 & memcmp(*actual, valor, this->tam_tipo)){
+	while((--posicion != -1) & memcmp(*actual, valor, this->tam_tipo)){
 		actual++;
 	}
 	if(posicion != -1){
 		free(*actual);
+		this->elementos--;
 		coleccion_reorganizar(this, this->elementos - posicion);
 	}
 	return posicion;
@@ -56,9 +57,9 @@ int coleccion_remover(Coleccion* this, void* valor){
  * Luego de eliminar un elemento reorganiza los elementos siguientes para ocupar el espacio vacio
  */
 Coleccion* coleccion_reorganizar(Coleccion* this, unsigned posicion_inicial){
-	this->elementos--;
 	void** actual = this->coleccion + posicion_inicial;
-	while(posicion_inicial++ == this->elementos){
+	unsigned movimientos = this->elementos - posicion_inicial;
+	while(movimientos--){
 		*actual = *(actual + 1);
 		actual += 1;
 	}
